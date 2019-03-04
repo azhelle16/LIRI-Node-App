@@ -21,12 +21,23 @@ This application has 4 available commands and are as follows:
 
 	If the command is not available, the app will prompt the user to contact the System Administrator for further assistance.
 
+The app also writes on a file called "log.txt". It includes the command, input and data returned by the api.
+
+Screenshots of how the app works is under /images folder.
+
 ### APIs / Packages used
 
 Spotify - https://www.npmjs.com/package/node-spotify-api
+
 Axios - https://www.npmjs.com/package/axios (will be used for the movie and concert APIs)
+
 OMDB - http://www.omdbapi.com
+
 Concerts - http://www.artists.bandsintown.com/bandsintown-api
+
+Moment - https://www.npmjs.com/package/moment (for datetime formatting)
+
+DotEnv - https://www.npmjs.com/package/dotenv
 
 ### Note
 

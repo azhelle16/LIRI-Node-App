@@ -123,7 +123,13 @@ function sendQuery(url,flag) {
 	  			if (err) {
 	    			return console.log('\n\nError occurred: ' + err+"\n\n");
 	  			}	 
-				spotifyThisSong(JSON.stringify(data)); 
+	  			var data = JSON.parse(JSON.stringify(data))
+				items = data.tracks.items
+				if (items.length == 0) {
+					console.log("\n\nNo available data at this moment.\n\n")
+					return
+				}
+				spotifyThisSong(items); 
 				writeFile(JSON.stringify(data,null,2))
 			});	
 		break;	
@@ -179,12 +185,9 @@ function printConcertDetails(data) {
  #######################################################################
 */
 
-function spotifyThisSong(data) {
+function spotifyThisSong(items) {
 
 	console.log("\nTRACK INFORMATION FOR "+input.toUpperCase()+"\n\n")
-
-	var data = JSON.parse(data)
-	items = data.tracks.items
 
 	for (var i = 0; i < items.length; i++) {
 		console.log("SONG NAME     :  "+items[i].name)
