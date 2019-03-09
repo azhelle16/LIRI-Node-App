@@ -26,7 +26,7 @@ var fs = require("fs")
 var command = process.argv[2]
 var input = process.argv.slice(3).join(" ")
 var url
-baseCommand()
+baseCommand(0)
 
 /*
  #######################################################################
@@ -35,15 +35,15 @@ baseCommand()
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : March 03, 2019 PST
  #  MODIFIED BY   : Maricel Louise Sumulong
- #  REVISION DATE : March 04, 2019 PST
- #  REVISION #    : 1
+ #  REVISION DATE : March 05, 2019 PST
+ #  REVISION #    : 2
  #  DESCRIPTION   : switch function for the command and the input
- #  PARAMETERS    : none
+ #  PARAMETERS    : flag
  #
  #######################################################################
 */
 
-function baseCommand() {
+function baseCommand(flag) {
 	
 	switch (command.toLowerCase()) {
 		default:
@@ -55,29 +55,33 @@ function baseCommand() {
 				return
 			}
 			url = "https://rest.bandsintown.com/artists/"+input+"/events?app_id=codingbootcamp"
-			sendQuery(url,1)
+			sendQuery(url,1,flag)
 		break;
 		case "spotify-this-song":
 			if (input == "" || input == undefined) {
 				input = "The Sign"
 			}
-			sendQuery(url,2)
+			sendQuery(url,2,flag)
 		break;
 		case "movie-this":
 			if (input == "" || input == undefined) {
 				input = "Mr. Nobody"
 			}
 			url = "https://www.omdbapi.com/?t="+input+"&y=&plot=short&apikey=trilogy"
-			sendQuery(url,3)
+			sendQuery(url,3,flag)
 		break;
 		case "do-what-it-says":
+			timestamp = getDates();
+			writeFile("LOG TIME STARTS: "+timestamp+"\n\n")
+			writeFile("COMMAND: "+command+"\n")
 			var content = fs.readFileSync("random.txt", 'utf-8');
 			var cArr = content.split("\n")
 			for (var n = 0; n < cArr.length-1; n++) {
+				console.log("\n"+command+" : "+cArr[n])	
 				command = cArr[n].split(",")[0]
 				input = cArr[n].split(",")[1]
-				console.log("\n"+command+" : "+input)	
-				baseCommand()
+				writeFile("INPUT: "+command+" : "+input+"\n\n");			
+				baseCommand(1)
 			}
 		break;
 	}
@@ -91,15 +95,15 @@ function baseCommand() {
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : March 03, 2019 PST
  #  MODIFIED BY   : Maricel Louise Sumulong
- #  REVISION DATE : March 04, 2019 PST
- #  REVISION #    : 1 
+ #  REVISION DATE : March 05, 2019 PST
+ #  REVISION #    : 2
  #  DESCRIPTION   : sends url to collect data
- #  PARAMETERS    : url,flag
+ #  PARAMETERS    : url,flag,flag2
  #
  #######################################################################
 */
 
-function sendQuery(url,flag) {
+function sendQuery(url,flag,flag2) {
 
 	switch (flag) {
 		case 1: case 3:
@@ -109,8 +113,24 @@ function sendQuery(url,flag) {
 					console.log("\n\nNo available data at this moment.\n\n")
 				} else {
 					switch (flag) {
-						case 1: printConcertDetails(response.data); break;
-						case 3: printMovieDetails(response.data); break
+						case 1:			
+							if (!flag2) {				
+								timestamp = getDates();
+								writeFile("LOG TIME STARTS: "+timestamp+"\n\n")
+								writeFile("COMMAND: "+command+"\n")
+								writeFile("INPUT: "+input+"\n\n") 
+							} 
+							printConcertDetails(response.data);
+						break;
+						case 3: 	
+							if (!flag2) {						
+								timestamp = getDates();
+								writeFile("LOG TIME STARTS: "+timestamp+"\n\n")
+								writeFile("COMMAND: "+command+"\n")
+								writeFile("INPUT: "+input+"\n\n")
+							} 
+							printMovieDetails(response.data);
+						break
 					}
 				  }
 			})
@@ -128,9 +148,16 @@ function sendQuery(url,flag) {
 				if (items.length == 0) {
 					console.log("\n\nNo available data at this moment.\n\n")
 					return
+				}	
+				if (!flag2) {						
+					timestamp = getDates();
+
+					writeFile("LOG TIME STARTS: "+timestamp+"\n\n")
+					writeFile("COMMAND: "+command+"\n")
+					writeFile("INPUT: "+input+"\n\n")
 				}
 				spotifyThisSong(items); 
-				writeFile(JSON.stringify(data,null,2))
+				//writeFile(JSON.stringify(data,null,2))
 			});	
 		break;	
 	}
@@ -144,8 +171,8 @@ function sendQuery(url,flag) {
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : March 03, 2019 PST
  #  MODIFIED BY   : Maricel Louise Sumulong
- #  REVISION DATE : March 04, 2019 PST
- #  REVISION #    : 1 
+ #  REVISION DATE : March 05, 2019 PST
+ #  REVISION #    : 2 
  #  DESCRIPTION   : prints concert information for selected artists
  #  PARAMETERS    : json data
  #
@@ -155,18 +182,24 @@ function sendQuery(url,flag) {
 function printConcertDetails(data) {
 
 	console.log("\nCONCERT EVENTS FOR "+input.toUpperCase()+"\n\n")
+	writeFile("CONCERT EVENTS FOR "+input.toUpperCase()+"\n\n")
 
 	for (var i = 0; i < data.length; i++) {
 		console.log("VENUE NAME  :  "+data[i].venue.name)
+		writeFile("VENUE NAME  :  "+data[i].venue.name+"\n")
 		if (data[i].venue.region == "" || data[i].venue.region == " ") {
 			console.log("LOCATION    :  "+data[i].venue.city+", "+data[i].venue.country)
+			writeFile("LOCATION    :  "+data[i].venue.city+", "+data[i].venue.country+"\n")
 		} else {
 			console.log("LOCATION    :  "+data[i].venue.city+", "+data[i].venue.region+" "+data[i].venue.country)
+			writeFile("LOCATION    :  "+data[i].venue.city+", "+data[i].venue.region+" "+data[i].venue.country+"\n")
 		  }
 		console.log("DATE        :  "+moment.utc(data[i].datetime).format('MM/DD/YYYY')+"\n")
+		writeFile("DATE        :  "+moment.utc(data[i].datetime).format('MM/DD/YYYY')+"\n\n")
 	}
 
-	writeFile(JSON.stringify(data,null,2))
+	timestamp = getDates();
+	writeFile("LOG TIME ENDS: "+timestamp+"\n\n")
 
 }
 
@@ -177,8 +210,8 @@ function printConcertDetails(data) {
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : March 03, 2019 PST
  #  MODIFIED BY   : Maricel Louise Sumulong
- #  REVISION DATE : March 04, 2019 PST
- #  REVISION #    : 1
+ #  REVISION DATE : March 05, 2019 PST
+ #  REVISION #    : 2
  #  DESCRIPTION   : prints out the track information into a human readable format
  #  PARAMETERS    : json data
  #
@@ -188,17 +221,27 @@ function printConcertDetails(data) {
 function spotifyThisSong(items) {
 
 	console.log("\nTRACK INFORMATION FOR "+input.toUpperCase()+"\n\n")
+	writeFile("TRACK INFORMATION FOR "+input.toUpperCase()+"\n\n")
 
 	for (var i = 0; i < items.length; i++) {
 		console.log("SONG NAME     :  "+items[i].name)
+		writeFile("SONG NAME     :  "+items[i].name+"\n")
 		console.log("ARTIST        :  "+items[i].artists[0].name)
+		writeFile("ARTIST        :  "+items[i].artists[0].name+"\n")
 		console.log("ALBUM         :  "+items[i].album.name)
+		writeFile("ALBUM         :  "+items[i].album.name+"\n")
 		if (items[i].preview_url == null || items[i].preview_url == "") {
 			console.log("PREVIEW LINK  :  No available preview\n")
+			writeFile("PREVIEW LINK  :  No available preview\n\n")
 		} else {
 			console.log("PREVIEW LINK  :  "+items[i].preview_url+"\n")
+			writeFile("PREVIEW LINK  :  "+items[i].preview_url+"\n\n")
 		  }
 	}
+
+	timestamp = getDates();
+	writeFile("LOG TIME ENDS: "+timestamp+"\n\n")
+
 }
 
 /*
@@ -208,8 +251,8 @@ function spotifyThisSong(items) {
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : March 03, 2019 PST
  #  MODIFIED BY   : Maricel Louise Sumulong
- #  REVISION DATE : March 04, 2019 PST
- #  REVISION #    : 1
+ #  REVISION DATE : March 05, 2019 PST
+ #  REVISION #    : 2
  #  DESCRIPTION   : prints movie information
  #  PARAMETERS    : json data
  #
@@ -219,19 +262,28 @@ function spotifyThisSong(items) {
 function printMovieDetails(data) {
 
     console.log("\nTitle\t\t: "+data.Title)
+    writeFile("Title\t\t: "+data.Title+"\n")
     console.log("Released Year\t: "+data.Year)
+    writeFile("Released Year\t: "+data.Year+"\n")
     console.log("Ratings:")
+    writeFile("Ratings:\n")
     for (var m = 0; m < data.Ratings.length; m++) {
-    	if (data.Ratings[m].Source == "Internet Movie Database" || data.Ratings[m].Source == "Rotten Tomatoes")
+    	if (data.Ratings[m].Source == "Internet Movie Database" || data.Ratings[m].Source == "Rotten Tomatoes") {
     		console.log("\t"+data.Ratings[m].Source+" : "+data.Ratings[m].Value)
+    		writeFile("\t"+data.Ratings[m].Source+" : "+data.Ratings[m].Value+"\n")
+    	}
     }
     console.log("Country\t\t: "+data.Country)
+    writeFile("Country\t\t: "+data.Country+"\n")
     console.log("Language\t: "+data.Language)
+    writeFile("Language\t: "+data.Language+"\n")
     console.log("Actors\t\t: "+data.Actors)
+    writeFile("Actors\t\t: "+data.Actors+"\n")
     console.log("Plot\t\t: "+data.Plot+"\n")
+    writeFile("Plot\t\t: "+data.Plot+"\n\n")
 
-    writeFile(JSON.stringify(data,null,2))
-
+    timestamp = getDates();
+	writeFile("LOG TIME ENDS: "+timestamp+"\n\n")
 }
 
 /*
@@ -277,30 +329,28 @@ function getDates() {
  #  FUNCTION NAME : writeFile
  #  AUTHOR        : Maricel Louise Sumulong
  #  DATE          : March 04, 2019 PST
- #  MODIFIED BY   : 
- #  REVISION DATE : 
- #  REVISION #    : 
+ #  MODIFIED BY   : Maricel Louise Sumulong
+ #  REVISION DATE : March 05, 2019 PST
+ #  REVISION #    : 1
  #  DESCRIPTION   : writes data to a file
- #  PARAMETERS    : json stringified data
+ #  PARAMETERS    : string
  #
  #######################################################################
 */
 
 function writeFile(data) {
 
-	timestamp = getDates();
-
 	if(!fs.existsSync("log.txt")) {
 		//console.log("\n\nFile not found. Creating log.txt.\n\n");
 
-		fs.writeFileSync("./log.txt",timestamp+" ***** "+command+" ***** "+input+"\n\n"+data+"\n\n")
+		fs.writeFileSync("./log.txt",data)
 		// if(fs.existsSync("bank.txt")) {
 		// 	console.log("File created!\n\n");
 		// }
 
 	} else {
 
-		fs.appendFileSync("./log.txt",timestamp+" ***** "+command+" ***** "+input+"\n\n"+data+"\n\n")
+		fs.appendFileSync("./log.txt",data)
 
 	  }
 
